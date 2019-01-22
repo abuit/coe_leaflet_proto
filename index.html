@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+        crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js" integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+        crossorigin=""></script>
+    <script src="js/area-polygon.js"></script>
+    <script src="js/segments.js"></script>
+    <script src="js/markers.js"></script>
+    <script src="js/areas.js"></script>
+</head>
+
+<body>
+    <div id="mapid" style="width: 100vw; height: 100vh;"/>
+    <script>
+        var map = L.map('mapid', { crs: L.CRS.Simple }).setView([1024, 1024], -10);
+
+        //Set the map as main image
+        L.imageOverlay('img/map.png', [[-0, 0], [2048, 2048]]).addTo(map);
+        map.setMaxBounds([[-0, 0], [2048, 2048]]);
+
+
+        //Handlers
+        map.on('zoomend', checkLayers);
+
+        map.on('click', function (e) {
+            console.log(e.latlng);
+        });
+
+        //Initialize
+
+        //Always add kingdom borders
+        map.addLayer(kingdomBorders);
+        map.closePopupOnClick = true;
+
+        //Depending on zoom level, also add other layers
+        checkLayers();
+
+        //Functions
+        function checkLayers() {
+          
+            if (map.getZoom() < 1) {
+                map.addLayer(kingdomMarkers);
+                map.removeLayer(duchyBorders);
+            }
+            else {
+                map.addLayer(duchyBorders);
+                map.removeLayer(kingdomMarkers);
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
