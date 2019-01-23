@@ -18,6 +18,14 @@
 <body>
     <div id="mapid" style="width: 100vw; height: 100vh;"/>
     <script>
+
+
+        //Initialize local storage with empty marker array
+        if(!localStorage.getItem("markers"))
+        {
+            localStorage.setItem("markers", JSON.stringify([]));
+        }
+
         var map = L.map('mapid', { crs: L.CRS.Simple }).setView([1024, 1024], -10);
 
         //Set the map as main image
@@ -28,17 +36,42 @@
         //Handlers
         map.on('zoomend', checkLayers);
 
-        map.on('click', function (e) {
-            console.log(e.latlng);
+        var creationPopup = L.popup();
+        map.on('contextmenu', function(e) {
+                creationPopup
+                .setLatLng(e.latlng)
+                .setContent('<p>Create new point of interest?<p>'  +
+                    '<p>Name: <input type="text" id="poiname"></p>' + 
+                    '<p align="center"><button type="button" onclick="createMarker(' + e.latlng.lat + ', ' + e.latlng.lng  + ')">Create</button></p>')
+                .addTo(map)
+                .openOn(map);
         });
 
+        function createMarker(lat, lng) {
+            var name = document.getElementById('poiname');
+            if (name.value != "") {
+                map.closePopup(creationPopup);
+                L.marker([lat, lng], { title: name.value }).addTo(map);
+
+                //Persist
+                var markers = JSON.parse(localStorage.getItem("markers"));
+                markers.push({ name: name.value, lat: lat, lng: lng});
+                localStorage.setItem('markers', JSON.stringify(markers));
+            }
+            else {
+                name.focus();
+            }
+        }
+
         //Initialize
+        var markers = JSON.parse(localStorage.getItem("markers"))
+        markers.forEach(function(marker) {
+            L.marker([marker.lat, marker.lng], { title: marker.name }).addTo(map);
+        })
 
         //Always add kingdom borders
         map.addLayer(kingdomBorders);
         map.closePopupOnClick = true;
-
-        L.marker([756.09375, 1418.21875], { title: "King's Landing" }).addTo(map);
 
         //Depending on zoom level, also add other layers
         checkLayers();
