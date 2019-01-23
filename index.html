@@ -38,6 +38,8 @@
         map.addLayer(kingdomBorders);
         map.closePopupOnClick = true;
 
+        L.marker([756.09375, 1418.21875], { title: "King's Landing" }).addTo(map);
+
         //Depending on zoom level, also add other layers
         checkLayers();
 

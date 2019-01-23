@@ -76,7 +76,7 @@ function coordinateMatches(a, b) {
 //Segments are generally in the direction from low to high (e.g. C10 - C11). For drawing polygons, reversing the array might be needed.
 
 //Data for continent
-var ContinentSegments = {
+sessionStorage.setItem('segmentInfo', JSON.stringify({
     C13: {
         segment: convertToLatLong([
             [1119, 984],
@@ -226,12 +226,7 @@ var ContinentSegments = {
             [1266, 1521],
             [1253, 1532]]),
         type: 'continent'
-    }
-
-};
-
-//KingdomSegments - Segments defining a border between kingdoms, but not with the sea
-var KingdomSegments = {
+    },
     K12: {
         segment: convertToLatLong([
             [1119, 984],
@@ -332,11 +327,7 @@ var KingdomSegments = {
             [1239, 1531],
             [1253, 1532]]),
         type: 'kingdom'
-    }
-};
-
-//DuchySegments - Segments defining a border between duchies, but not between kingdoms or the sea
-var DuchyBorderSegments = {
+    },
     D64: {
         segment: convertToLatLong([
             [1213, 927],
@@ -657,4 +648,4 @@ var DuchyBorderSegments = {
             [1175, 1516]]),
         type: 'duchy'
     }
-};
+}));

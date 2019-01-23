@@ -4,9 +4,6 @@ const pixelInKilometer = 128/1000;
 const pixelInSquareMeter = 128*128;
 const pixelInSquareKilometer = 128*128/1000000;
 
-//this variable is used to reference all kingdoms
-var kingdomBorders = new L.FeatureGroup();
-
 function createKingdom(name, segments) {
     var segmentCount = segments.length;
     
@@ -40,11 +37,6 @@ function createKingdom(name, segments) {
         map.openPopup(popup);
     });
 }
-
-createKingdom("A'K", [ContinentSegments.C13, ContinentSegments.C14, ContinentSegments.C15, ContinentSegments.C16, ContinentSegments.C17, ContinentSegments.C18, ContinentSegments.C19, KingdomSegments.K32, KingdomSegments.K31, KingdomSegments.K30, KingdomSegments.K19, KingdomSegments.K18b, KingdomSegments.K18, KingdomSegments.K17, KingdomSegments.K16, KingdomSegments.K15, KingdomSegments.K14, KingdomSegments.K13, KingdomSegments.K12]);
-
-//this variable is used to reference all duchies
-var duchyBorders = new L.FeatureGroup();
 
 function createDuchy(name, biome, race, segments) {
     var segmentCount = segments.length;
@@ -113,15 +105,25 @@ function createDuchy(name, biome, race, segments) {
     duchyBorders.addLayer(polygon);
 }
 
-createDuchy('Unknown', 'Grasslands', 'Neran', [ContinentSegments.C13, DuchyBorderSegments.D64, DuchyBorderSegments.D65, KingdomSegments.K13, KingdomSegments.K12]);
-createDuchy('Lem', 'Grasslands', 'Neran', [ContinentSegments.C14, DuchyBorderSegments.D67, DuchyBorderSegments.D66, DuchyBorderSegments.D64]);
-createDuchy('Unknown', 'Grasslands', 'Neran', [KingdomSegments.K14, KingdomSegments.K15, KingdomSegments.K16, DuchyBorderSegments.D71, DuchyBorderSegments.D70, DuchyBorderSegments.D68, DuchyBorderSegments.D66, DuchyBorderSegments.D65]);
-createDuchy('Unknown', 'Grasslands', 'Neran', [ContinentSegments.C15, DuchyBorderSegments.D69, DuchyBorderSegments.D68, DuchyBorderSegments.D67]);
-createDuchy('Unknown', 'Woodland Savannah', "To'Resk", [ContinentSegments.C16, DuchyBorderSegments.D69, DuchyBorderSegments.D70, DuchyBorderSegments.D72, DuchyBorderSegments.D73, DuchyBorderSegments.D74]);
-createDuchy('Unknown', 'Woodland Savannah', "To'Resk", [DuchyBorderSegments.D71, DuchyBorderSegments.D72, DuchyBorderSegments.D75, DuchyBorderSegments.D77, KingdomSegments.K18, KingdomSegments.K17]);
-createDuchy('Unknown', 'Woodland Savannah', "To'Resk", [DuchyBorderSegments.D75, DuchyBorderSegments.D78, DuchyBorderSegments.D79, DuchyBorderSegments.D76, DuchyBorderSegments.D73]);
-createDuchy('Unknown', 'Woodland Savannah', "To'Resk", [ContinentSegments.C17, DuchyBorderSegments.D80, DuchyBorderSegments.D76, DuchyBorderSegments.D74]);
-createDuchy('Unknown', 'Swamp', 'Dras', [KingdomSegments.K18b, DuchyBorderSegments.D81, DuchyBorderSegments.D83, DuchyBorderSegments.D82, DuchyBorderSegments.D78, DuchyBorderSegments.D77]);
-createDuchy('Unknown', 'Swamp', 'Dras', [ContinentSegments.C18, DuchyBorderSegments.D80, DuchyBorderSegments.D79, DuchyBorderSegments.D82, DuchyBorderSegments.D84]);
-createDuchy('Unknown', 'Swamp', 'Dras', [KingdomSegments.K19, KingdomSegments.K30, DuchyBorderSegments.D85, DuchyBorderSegments.D81]);
-createDuchy('Unknown', 'Swamp', 'Dras', [KingdomSegments.K31, KingdomSegments.K32, ContinentSegments.C19, DuchyBorderSegments.D84, DuchyBorderSegments.D83, DuchyBorderSegments.D85]);
+var segmentInfo = JSON.parse(sessionStorage.getItem('segmentInfo'));
+
+//this variable is used to reference all kingdoms
+var kingdomBorders = new L.FeatureGroup();
+
+createKingdom("A'K", [segmentInfo.C13, segmentInfo.C14, segmentInfo.C15, segmentInfo.C16, segmentInfo.C17, segmentInfo.C18, segmentInfo.C19, segmentInfo.K32, segmentInfo.K31, segmentInfo.K30, segmentInfo.K19, segmentInfo.K18b, segmentInfo.K18, segmentInfo.K17, segmentInfo.K16, segmentInfo.K15, segmentInfo.K14, segmentInfo.K13, segmentInfo.K12]);
+
+//this variable is used to reference all duchies
+var duchyBorders = new L.FeatureGroup();
+
+createDuchy('Unknown', 'Grasslands', 'Neran', [segmentInfo.C13, segmentInfo.D64, segmentInfo.D65, segmentInfo.K13, segmentInfo.K12]);
+createDuchy('Lem', 'Grasslands', 'Neran', [segmentInfo.C14, segmentInfo.D67, segmentInfo.D66, segmentInfo.D64]);
+createDuchy('Unknown', 'Grasslands', 'Neran', [segmentInfo.K14, segmentInfo.K15, segmentInfo.K16, segmentInfo.D71, segmentInfo.D70, segmentInfo.D68, segmentInfo.D66, segmentInfo.D65]);
+createDuchy('Unknown', 'Grasslands', 'Neran', [segmentInfo.C15, segmentInfo.D69, segmentInfo.D68, segmentInfo.D67]);
+createDuchy('Unknown', 'Woodland Savannah', "To'Resk", [segmentInfo.C16, segmentInfo.D69, segmentInfo.D70, segmentInfo.D72, segmentInfo.D73, segmentInfo.D74]);
+createDuchy('Unknown', 'Woodland Savannah', "To'Resk", [segmentInfo.D71, segmentInfo.D72, segmentInfo.D75, segmentInfo.D77, segmentInfo.K18, segmentInfo.K17]);
+createDuchy('Unknown', 'Woodland Savannah', "To'Resk", [segmentInfo.D75, segmentInfo.D78, segmentInfo.D79, segmentInfo.D76, segmentInfo.D73]);
+createDuchy('Unknown', 'Woodland Savannah', "To'Resk", [segmentInfo.C17, segmentInfo.D80, segmentInfo.D76, segmentInfo.D74]);
+createDuchy('Unknown', 'Swamp', 'Dras', [segmentInfo.K18b, segmentInfo.D81, segmentInfo.D83, segmentInfo.D82, segmentInfo.D78, segmentInfo.D77]);
+createDuchy('Unknown', 'Swamp', 'Dras', [segmentInfo.C18, segmentInfo.D80, segmentInfo.D79, segmentInfo.D82, segmentInfo.D84]);
+createDuchy('Unknown', 'Swamp', 'Dras', [segmentInfo.K19, segmentInfo.K30, segmentInfo.D85, segmentInfo.D81]);
+createDuchy('Unknown', 'Swamp', 'Dras', [segmentInfo.K31, segmentInfo.K32, segmentInfo.C19, segmentInfo.D84, segmentInfo.D83, segmentInfo.D85]);
