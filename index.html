@@ -16,7 +16,8 @@
 </head>
 
 <body>
-    <div id="mapid" style="width: 100vw; height: 100vh;"/>
+    <div id="mapid" style="width: 100vw; height: 100vh;"></div>
+    <div>Icons made by <a href="http://www.freepik.com/" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" 		    title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" 		    title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
     <script>
 
 
@@ -32,46 +33,39 @@
         L.imageOverlay('img/map.png', [[-0, 0], [2048, 2048]]).addTo(map);
         map.setMaxBounds([[-0, 0], [2048, 2048]]);
 
-
         //Handlers
         map.on('zoomend', checkLayers);
 
+       //Always add kingdom borders & capital/castle markers
+        map.addLayer(kingdomBorders);
+        map.addLayer(highMarkers);
+
+        map.closePopupOnClick = true;
+
+        //temp
+        // Creation of markers
         var creationPopup = L.popup();
         map.on('contextmenu', function(e) {
                 creationPopup
                 .setLatLng(e.latlng)
                 .setContent('<p>Create new point of interest?<p>'  +
-                    '<p>Name: <input type="text" id="poiname"></p>' + 
+                    '<p><input type="text" id="poiname">' +
+                    '<select id="poitype">' +
+                        '<option value="outpost">Outpost</option>' +
+                        '<option value="hamlet">Hamlet</option>' +
+                        '<option value="fort">Fort</option>' +
+                        '<option value="village">Village</option>' +
+                        '<option value="keep">Keep</option>' +
+                        '<option value="town">Town</option>' +
+                        '<option value="stronghold">Stronghold</option>' +
+                        '<option value="city">City</option>' +
+                        '<option value="castle">Castle</option>' +
+                        '<option value="capital">Capital</option>' +
+                    '</select></p>' +
                     '<p align="center"><button type="button" onclick="createMarker(' + e.latlng.lat + ', ' + e.latlng.lng  + ')">Create</button></p>')
                 .addTo(map)
                 .openOn(map);
         });
-
-        function createMarker(lat, lng) {
-            var name = document.getElementById('poiname');
-            if (name.value != "") {
-                map.closePopup(creationPopup);
-                L.marker([lat, lng], { title: name.value }).addTo(map);
-
-                //Persist
-                var markers = JSON.parse(localStorage.getItem("markers"));
-                markers.push({ name: name.value, lat: lat, lng: lng});
-                localStorage.setItem('markers', JSON.stringify(markers));
-            }
-            else {
-                name.focus();
-            }
-        }
-
-        //Initialize
-        var markers = JSON.parse(localStorage.getItem("markers"))
-        markers.forEach(function(marker) {
-            L.marker([marker.lat, marker.lng], { title: marker.name }).addTo(map);
-        })
-
-        //Always add kingdom borders
-        map.addLayer(kingdomBorders);
-        map.closePopupOnClick = true;
 
         //Depending on zoom level, also add other layers
         checkLayers();
@@ -86,6 +80,27 @@
             else {
                 map.addLayer(duchyBorders);
                 map.removeLayer(kingdomMarkers);
+            }
+
+            if (map.getZoom() > 0) {
+                map.addLayer(mediumMarkers);
+            }
+            else {
+                map.removeLayer(mediumMarkers);
+            }
+
+            if (map.getZoom() > 1) {
+                map.addLayer(lowMarkers);
+            }
+            else {
+                map.removeLayer(lowMarkers);
+            }
+            
+            if (map.getZoom() > 2) {
+                map.addLayer(minuteMarkers);
+            }
+            else {
+                map.removeLayer(minuteMarkers);
             }
         }
 

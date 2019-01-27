@@ -63,6 +63,11 @@ function createDuchy(name, biome, race, segments) {
     };
 
     polygon.on("mouseover", function(e) {
+        if (map.getZoom() != 1) return;
+
+        //temp
+        return;
+
         e.target.setStyle(
             {
                 color: 'red', 
@@ -85,7 +90,6 @@ function createDuchy(name, biome, race, segments) {
     });
 
     polygon.on("click", function(e) {
-        console.log(e);
         var popup = L.popup()
         .setContent('<p>Duchy name: <b>'+ e.target.info.name + '</b></p>'  + 
                     '<i>Quick facts:</i>' +
