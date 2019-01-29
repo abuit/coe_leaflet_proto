@@ -1,4 +1,4 @@
-var AbstractArea = L.Polygon.extend({
+const AbstractArea = L.Polygon.extend({
 
     //Global size settings
     globalSettings: {
@@ -57,7 +57,7 @@ var AbstractArea = L.Polygon.extend({
 
 });
 
-var Kingdom = AbstractArea.extend({
+const Kingdom = AbstractArea.extend({
 
     initialize: function(name, segments) {
         AbstractArea.prototype.initialize.call(this, name, segments);
@@ -85,7 +85,7 @@ var Kingdom = AbstractArea.extend({
 
 });
 
-var Duchy = AbstractArea.extend({
+const Duchy = AbstractArea.extend({
 
     initialize: function(name, biome, race, segments) {
         AbstractArea.prototype.initialize.call(this, name, segments);
