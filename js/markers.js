@@ -19,11 +19,15 @@ K5Marker.addTo(kingdomMarkers);
 //High markers - Persistent markers at lowest detail level
 //Medium markers - Persistent markers at medium level
 //Low markers - Persistent markers at highest detail level
+//Minute markers - Persistent markers at super-highest detail level
 
 var highMarkers = new L.FeatureGroup();
 var mediumMarkers = new L.FeatureGroup();
 var lowMarkers = new L.FeatureGroup();
 var minuteMarkers = new L.FeatureGroup();
+
+// Search markers is not shown on the map but used for indexation
+var searchMarkers = new L.FeatureGroup();
 
 var oupostIcon = L.icon({
     iconUrl: 'img/markers/1-outpost.svg',
@@ -137,6 +141,7 @@ markers.forEach(function(marker) {
     var x = new Settlement(marker.lat, marker.lng, marker.name, marker.type);
     x.bindPopup('<b>' + x.name + '</b> (' + x.typeCaps + ')');
     x.addTo(x.getLayer());
+    x.addTo(searchMarkers);
 })
 
 //Handler to create a new marker
@@ -149,7 +154,8 @@ function createMarker(lat, lng) {
         var x =  new Settlement(lat, lng, name.value, type.value);
         x.bindPopup('<b>' + x.name + '</b> (' + x.typeCaps + ')');
         x.addTo(x.getLayer());
-        
+        x.addTo(searchMarkers);
+
         //Persist
         var markers = JSON.parse(localStorage.getItem("markers"));
         markers.push({ name: x.name, lat: lat, lng: lng, type: x.type});

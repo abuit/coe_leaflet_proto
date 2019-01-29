@@ -9,6 +9,9 @@
         crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js" integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
         crossorigin=""></script>
+    <!--<script src="https://unpkg.com/area-polygon@1.0.1/index.js"></script>-->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-search@2.9.8/dist/leaflet-search.src.css"/>
+    <script src="https://unpkg.com/leaflet-search@2.9.8/dist/leaflet-search.src.js"></script>
     <script src="js/segments.js"></script>
     <script src="js/markers.js"></script>
     <script src="js/areas.js"></script>
@@ -18,8 +21,6 @@
     <div id="mapid" style="width: 100vw; height: 100vh;"></div>
     <div>Icons made by <a href="http://www.freepik.com/" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" 		    title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" 		    title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
     <script>
-
-
         //Initialize local storage with empty marker array
         if(!localStorage.getItem("markers"))
         {
@@ -37,8 +38,7 @@
 
        //Always add kingdom borders & capital/castle markers
         map.addLayer(kingdomBorders);
-        map.addLayer(highMarkers);
-
+        
         map.closePopupOnClick = true;
 
         //temp
@@ -66,12 +66,50 @@
                 .openOn(map);
         });
 
+        var afterZoom;
+
+        var controlSearch = new L.Control.Search({
+            position:'topleft',		
+            layer: searchMarkers,
+            initial: false,
+            moveToLocation: function(e){
+                var currentZoom = map.getZoom();
+                var zoom;
+                switch(e.layer.getLayer()) {
+                    case highMarkers:
+                        zoom = 0;
+                        break;
+                    case mediumMarkers:
+                        zoom = 1;
+                        break;
+                    case lowMarkers: 
+                        zoom = 2;
+                        break;
+                    case minuteMarkers: 
+                        zoom = 3;
+                        break;
+                }
+                map.setView([e.lat, e.lng], zoom);
+                if (currentZoom == zoom) {
+                    e.layer.openPopup();
+                }
+                else {
+                    afterZoom = () => e.layer.openPopup();
+                }
+            },
+            marker: false
+        });
+
+        map.addControl( controlSearch );
+
         //Depending on zoom level, also add other layers
         checkLayers();
 
         //Functions
         function checkLayers() {
-          
+            map.removeLayer(searchMarkers);
+            map.addLayer(highMarkers);
+
             if (map.getZoom() < 1) {
                 map.addLayer(kingdomMarkers);
                 map.removeLayer(duchyBorders);
@@ -100,6 +138,12 @@
             }
             else {
                 map.removeLayer(minuteMarkers);
+            }
+
+            if (afterZoom) 
+            {
+                afterZoom();
+                afterZoom = null;
             }
         }
 
