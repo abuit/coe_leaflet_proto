@@ -21,18 +21,18 @@ var AbstractArea = L.Polygon.extend({
 
         L.Polygon.prototype.initialize.call(this, polygonLine);
 
-        this.size = area(polygonLine) * this.globalSettings.pixelInSquareKilometer,
+        this.size = this.area(polygonLine) * this.globalSettings.pixelInSquareKilometer,
         this.coastline = segments.filter(item => item.type == 'continent').reduce((size, item) => size + item.segment.segmentLength(), 0) * this.globalSettings.pixelInKilometer,
         this.kingdomBorder = segments.filter(item => item.type == 'kingdom').reduce((size, item) => size + item.segment.segmentLength(), 0) * this.globalSettings.pixelInKilometer
     },
 
     //https://www.npmjs.com/package/area-polygon
-    area: function(points,signed) {
+    area(points,signed) {
         var l = points.length
         var det = 0
         var isSigned = signed || false
     
-        points = points.map(normalize)
+        points = points.map(this.normalize)
         if (points[0] != points[points.length -1])  
         points = points.concat(points[0])
     
@@ -45,7 +45,7 @@ var AbstractArea = L.Polygon.extend({
         return Math.abs(det) / 2
     },
     
-    normalize: function(point) {
+    normalize(point) {
         if (Array.isArray(point))
         return {
             x: point[0],
