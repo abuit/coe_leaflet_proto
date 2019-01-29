@@ -85,56 +85,74 @@ var capitalIcon = L.icon({
     iconAnchor: [15, 15]
 });
 
-function getIcon(type) {
-    var icon;
-        switch(type) {
-            case "outpost": icon = oupostIcon; break;
-            case "hamlet": icon = hamletIcon; break;
-            case "fort": icon = fortIcon; break;
-            case "village": icon = villageIcon; break;
-            case "keep": icon = keepIcon; break;
-            case "town": icon = townIcon; break;
-            case "stronghold": icon = strongholdIcon; break;
-            case "city": icon = cityIcon; break;
-            case "castle": icon = castleIcon; break;
-            case "capital": icon = capitalIcon; break;
+const Settlement = L.Marker.extend({
+
+    initialize: function(lat, lng, name, type, persist) {
+        L.Marker.prototype.initialize.call(this, [lat, lng]);
+        this.name = name;
+        this.type = type;
+        this.typeCaps = type.charAt(0).toUpperCase() + type.slice(1);
+
+        L.setOptions(this, { 
+            title: this.name, 
+            icon: this.getIcon()
+        });
+    },
+
+    getIcon() {
+        switch(this.type) {
+            case "outpost": return oupostIcon;
+            case "hamlet": return hamletIcon;
+            case "fort": return fortIcon;
+            case "village": return villageIcon;
+            case "keep": return keepIcon;
+            case "town": return townIcon;
+            case "stronghold": return strongholdIcon;
+            case "city": return cityIcon;
+            case "castle": return castleIcon;
+            case "capital": return capitalIcon;
         };
-    return icon;
-}
+    },
 
-function getLayer(type) {
-    var layer;
-    switch(type) {
-        case "outpost": layer = minuteMarkers; break;
-        case "hamlet": layer = minuteMarkers; break;
-        case "fort": layer = minuteMarkers; break;
-        case "village": layer = minuteMarkers; break;
-        case "keep": layer = lowMarkers; break;
-        case "town": layer = lowMarkers; break;
-        case "stronghold": layer = mediumMarkers; break;
-        case "city": layer = mediumMarkers; break;
-        case "castle": layer = highMarkers; break;
-        case "capital": layer = highMarkers; break;
-    };
-    return layer;
-}
+    getLayer() {
+        switch(this.type) {
+            case "outpost": return minuteMarkers;
+            case "hamlet": return minuteMarkers;
+            case "fort": return minuteMarkers;
+            case "village": return minuteMarkers;
+            case "keep": return lowMarkers;
+            case "town": return lowMarkers;
+            case "stronghold": return mediumMarkers;
+            case "city": return mediumMarkers;
+            case "castle": return highMarkers;
+            case "capital": return highMarkers;
+        };
+    }
 
-//Don't care for now
-String.prototype.capitalize = function() {
-    return this.charAt(0).toUpperCase() + this.slice(1);
-}
+});
 
+//Initialize from storage
+var markers = JSON.parse(localStorage.getItem("markers"))
+markers.forEach(function(marker) {
+    var x = new Settlement(marker.lat, marker.lng, marker.name, marker.type);
+    x.bindPopup('<b>' + x.name + '</b> (' + x.typeCaps + ')');
+    x.addTo(x.getLayer());
+})
+
+//Handler to create a new marker
 function createMarker(lat, lng) {
     var name = document.getElementById('poiname');
     var type = document.getElementById('poitype');
     if (name.value != "" && type.value != "") {
         map.closePopup(creationPopup);
         
-        L.marker([lat, lng], { title: name.value, icon: getIcon(type.value)}).addTo(getLayer(type.value)).bindPopup('<b>' + name.value + '</b> (' + type.value.capitalize() + ')');
+        var x =  new Settlement(lat, lng, name.value, type.value);
+        x.bindPopup('<b>' + x.name + '</b> (' + x.typeCaps + ')');
+        x.addTo(x.getLayer());
         
         //Persist
         var markers = JSON.parse(localStorage.getItem("markers"));
-        markers.push({ name: name.value, lat: lat, lng: lng, type: type.value});
+        markers.push({ name: x.name, lat: lat, lng: lng, type: x.type});
         localStorage.setItem('markers', JSON.stringify(markers));
     }
     else if (name.value == ''){
@@ -144,10 +162,3 @@ function createMarker(lat, lng) {
         type.focus();
     }
 }
-
-//Initialize
-var markers = JSON.parse(localStorage.getItem("markers"))
-markers.forEach(function(marker) {
-
-    L.marker([marker.lat, marker.lng], { title: marker.name, icon: getIcon(marker.type) }).addTo(getLayer(marker.type)).bindPopup('<b>' + marker.name + '</b> (' + marker.type.capitalize() + ')');
-})
