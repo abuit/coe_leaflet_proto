@@ -1,74 +1,114 @@
-//Global size settings
-const pixelInMeter = 128;
-const pixelInKilometer = 128/1000;
-const pixelInSquareMeter = 128*128;
-const pixelInSquareKilometer = 128*128/1000000;
+var AbstractArea = L.Polygon.extend({
 
-function createKingdom(name, segments) {
-    var segmentCount = segments.length;
+    //Global size settings
+    globalSettings: {
+        pixelInMeter: 128,
+        pixelInKilometer: 128/1000,
+        pixelInSquareMeter: 128*128,
+        pixelInSquareKilometer: 128*128/1000000
+    },
     
-    var coordinates = segments[0].segment;
-    for (var i = 1; i < segmentCount; i++)
-        coordinates = coordinates.addSegment(segments[i].segment);
+    initialize: function(name, segments) {
+        this.name = name;
+
+        //Initialize segments
+        var segmentCount = segments.length;
     
-    var polygon = L.polygon(coordinates, 
-    { 
-        color: 'black', 
-        weight: 5,
-        opacity: .5, 
-        fillOpacity: 0 
-    });
+        var polygonLine = segments[0].segment;
+        for (var i = 1; i < segmentCount; i++) {
+            polygonLine = polygonLine.addSegment(segments[i].segment);
+        }
 
-    polygon.info = {
-        name : name,
-        size : area(coordinates) * pixelInSquareKilometer,
-        coastline: segments.filter(item => item.type == 'continent').reduce((size, item) => size + item.segment.segmentLength(), 0) * pixelInKilometer,
-    };
+        L.Polygon.prototype.initialize.call(this, polygonLine);
 
-    kingdomBorders.addLayer(polygon);
+        this.size = area(polygonLine) * this.globalSettings.pixelInSquareKilometer,
+        this.coastline = segments.filter(item => item.type == 'continent').reduce((size, item) => size + item.segment.segmentLength(), 0) * this.globalSettings.pixelInKilometer,
+        this.kingdomBorder = segments.filter(item => item.type == 'kingdom').reduce((size, item) => size + item.segment.segmentLength(), 0) * this.globalSettings.pixelInKilometer
+    },
 
-    polygon.on("click", function(e) {
+    //https://www.npmjs.com/package/area-polygon
+    area: function(points,signed) {
+        var l = points.length
+        var det = 0
+        var isSigned = signed || false
+    
+        points = points.map(normalize)
+        if (points[0] != points[points.length -1])  
+        points = points.concat(points[0])
+    
+        for (var i = 0; i < l; i++)
+        det += points[i].x * points[i + 1].y
+            - points[i].y * points[i + 1].x
+        if (isSigned)
+        return det / 2
+        else
+        return Math.abs(det) / 2
+    },
+    
+    normalize: function(point) {
+        if (Array.isArray(point))
+        return {
+            x: point[0],
+            y: point[1]
+        }
+        else
+        return point
+    }
+
+});
+
+var Kingdom = AbstractArea.extend({
+
+    initialize: function(name, segments) {
+        AbstractArea.prototype.initialize.call(this, name, segments);
+        this.name = name;
+
+        L.setOptions(this, { 
+            color: 'black', 
+            weight: 5,
+            opacity: .5, 
+            fillOpacity: 0 
+        });
+
+        this.on("click", this.event_click)
+    },
+
+    event_click(e) {
         console.log(e);
         var popup = L.popup()
-        .setContent('<p>' + e.target.info.name + '<br />Size of kingdom: ' + Math.round(e.target.info.size) + ' km2</p><p>Coastline: ' + Math.round(e.target.info.coastline) + 'km</p>')
+        .setContent('<p>' + this.name + '<br />Size of kingdom: ' + Math.round(this.size) + ' km2</p><p>Coastline: ' + Math.round(this.coastline) + 'km</p>')
         .setLatLng(e.latlng)
         .openOn(map);
 
         map.openPopup(popup);
-    });
-}
+    }
 
-function createDuchy(name, biome, race, segments) {
-    var segmentCount = segments.length;
-    
-    var coordinates = segments[0].segment;
-    for (var i = 1; i < segmentCount; i++)
-        coordinates = coordinates.addSegment(segments[i].segment);
-    
-    var polygon = L.polygon(coordinates, 
-    { 
-        color: 'red', 
-        weight: 2,
-        opacity: .5, 
-        fillOpacity: 0 
-    });
+});
 
-    polygon.info = {
-        name: name,
-        biome: biome,
-        race: race,
-        size : area(coordinates) * pixelInSquareKilometer,
-        coastline: segments.filter(item => item.type == 'continent').reduce((size, item) => size + item.segment.segmentLength(), 0) * pixelInKilometer,
-        kingdomBorder: segments.filter(item => item.type == 'kingdom').reduce((size, item) => size + item.segment.segmentLength(), 0) * pixelInKilometer
-    };
+var Duchy = AbstractArea.extend({
 
-    polygon.on("mouseover", function(e) {
+    initialize: function(name, biome, race, segments) {
+        AbstractArea.prototype.initialize.call(this, name, segments);
+        this.name = name;
+        this.biome = biome;
+        this.race = race;
+
+        L.setOptions(this, { 
+            color: 'red', 
+            weight: 2,
+            opacity: .5, 
+            fillOpacity: 0 
+        });
+
+        this.on("mouseover", this.event_mouseover);
+        this.on("mouseout", this.event_mouseout);
+        this.on("click", this.event_click);
+    },
+
+    event_mouseover(e) {
         if (map.getZoom() != 1) return;
 
-        //temp
-        return;
-
-        e.target.setStyle(
+        this.setStyle(
             {
                 color: 'red', 
                 weight: 2,
@@ -76,10 +116,10 @@ function createDuchy(name, biome, race, segments) {
                 fillOpacity: 0.1
             }
         );
-    });
+    },
 
-    polygon.on("mouseout", function(e) {
-        e.target.setStyle(
+    event_mouseout(e) {
+        this.setStyle(
             {
                 color: 'red', 
                 weight: 2,
@@ -87,47 +127,44 @@ function createDuchy(name, biome, race, segments) {
                 fillOpacity: 0
             }
         );
-    });
+    },
 
-    polygon.on("click", function(e) {
+    event_click(e) {
         var popup = L.popup()
-        .setContent('<p>Duchy name: <b>'+ e.target.info.name + '</b></p>'  + 
+        .setContent('<p>Duchy name: <b>'+ this.name + '</b></p>'  + 
                     '<i>Quick facts:</i>' +
                     '<table>' +
-                    '<tr><td>Biome:</td><td>' + e.target.info.biome + '</td></tr>'  + 
-                    '<tr><td>Primary race:</td><td>' + e.target.info.race + '</td></tr>'  + 
-                    '<tr><td>Size of duchy:</td><td>' + Math.round(e.target.info.size) + ' km2 </td></tr>'  + 
-                    '<tr><td>Coastline:</td><td>' + (e.target.info.coastline == 0 ? '<i>None</i>' : Math.round(e.target.info.coastline) + ' km') + '</td></tr>'  + 
-                    '<tr><td>Kingdom border:</td><td>' + (e.target.info.kingdomBorder == 0 ? '<i>None</i>' : Math.round(e.target.info.kingdomBorder) + ' km') + '</td></tr>'  + 
+                    '<tr><td>Biome:</td><td>' + this.biome + '</td></tr>'  + 
+                    '<tr><td>Primary race:</td><td>' +this.race + '</td></tr>'  + 
+                    '<tr><td>Size of duchy:</td><td>' + Math.round(this.size) + ' km2 </td></tr>'  + 
+                    '<tr><td>Coastline:</td><td>' + (this.coastline == 0 ? '<i>None</i>' : Math.round(this.coastline) + ' km') + '</td></tr>'  + 
+                    '<tr><td>Kingdom border:</td><td>' + (this.kingdomBorder == 0 ? '<i>None</i>' : Math.round(this.kingdomBorder) + ' km') + '</td></tr>'  + 
                     '</table>')
         .setLatLng(e.latlng)
         .openOn(map);
 
         map.openPopup(popup);
-    });
+    }
 
-    duchyBorders.addLayer(polygon);
-}
+});
 
 var segmentInfo = JSON.parse(sessionStorage.getItem('segmentInfo'));
 
 //this variable is used to reference all kingdoms
 var kingdomBorders = new L.FeatureGroup();
-
-createKingdom("A'K", [segmentInfo.C13, segmentInfo.C14, segmentInfo.C15, segmentInfo.C16, segmentInfo.C17, segmentInfo.C18, segmentInfo.C19, segmentInfo.K32, segmentInfo.K31, segmentInfo.K30, segmentInfo.K19, segmentInfo.K18b, segmentInfo.K18, segmentInfo.K17, segmentInfo.K16, segmentInfo.K15, segmentInfo.K14, segmentInfo.K13, segmentInfo.K12]);
+kingdomBorders.addLayer(new Kingdom("A'K", [segmentInfo.C13, segmentInfo.C14, segmentInfo.C15, segmentInfo.C16, segmentInfo.C17, segmentInfo.C18, segmentInfo.C19, segmentInfo.K32, segmentInfo.K31, segmentInfo.K30, segmentInfo.K19, segmentInfo.K18b, segmentInfo.K18, segmentInfo.K17, segmentInfo.K16, segmentInfo.K15, segmentInfo.K14, segmentInfo.K13, segmentInfo.K12]));
 
 //this variable is used to reference all duchies
 var duchyBorders = new L.FeatureGroup();
-
-createDuchy('Unknown', 'Grasslands', 'Neran', [segmentInfo.C13, segmentInfo.D64, segmentInfo.D65, segmentInfo.K13, segmentInfo.K12]);
-createDuchy('Lem', 'Grasslands', 'Neran', [segmentInfo.C14, segmentInfo.D67, segmentInfo.D66, segmentInfo.D64]);
-createDuchy('Unknown', 'Grasslands', 'Neran', [segmentInfo.K14, segmentInfo.K15, segmentInfo.K16, segmentInfo.D71, segmentInfo.D70, segmentInfo.D68, segmentInfo.D66, segmentInfo.D65]);
-createDuchy('Unknown', 'Grasslands', 'Neran', [segmentInfo.C15, segmentInfo.D69, segmentInfo.D68, segmentInfo.D67]);
-createDuchy('Unknown', 'Woodland Savannah', "To'Resk", [segmentInfo.C16, segmentInfo.D69, segmentInfo.D70, segmentInfo.D72, segmentInfo.D73, segmentInfo.D74]);
-createDuchy('Unknown', 'Woodland Savannah', "To'Resk", [segmentInfo.D71, segmentInfo.D72, segmentInfo.D75, segmentInfo.D77, segmentInfo.K18, segmentInfo.K17]);
-createDuchy('Unknown', 'Woodland Savannah', "To'Resk", [segmentInfo.D75, segmentInfo.D78, segmentInfo.D79, segmentInfo.D76, segmentInfo.D73]);
-createDuchy('Unknown', 'Woodland Savannah', "To'Resk", [segmentInfo.C17, segmentInfo.D80, segmentInfo.D76, segmentInfo.D74]);
-createDuchy('Unknown', 'Swamp', 'Dras', [segmentInfo.K18b, segmentInfo.D81, segmentInfo.D83, segmentInfo.D82, segmentInfo.D78, segmentInfo.D77]);
-createDuchy('Unknown', 'Swamp', 'Dras', [segmentInfo.C18, segmentInfo.D80, segmentInfo.D79, segmentInfo.D82, segmentInfo.D84]);
-createDuchy('Unknown', 'Swamp', 'Dras', [segmentInfo.K19, segmentInfo.K30, segmentInfo.D85, segmentInfo.D81]);
-createDuchy('Unknown', 'Swamp', 'Dras', [segmentInfo.K31, segmentInfo.K32, segmentInfo.C19, segmentInfo.D84, segmentInfo.D83, segmentInfo.D85]);
+duchyBorders.addLayer(new Duchy('Unknown', 'Grasslands', 'Neran', [segmentInfo.C13, segmentInfo.D64, segmentInfo.D65, segmentInfo.K13, segmentInfo.K12]));
+duchyBorders.addLayer(new Duchy('Lem', 'Grasslands', 'Neran', [segmentInfo.C14, segmentInfo.D67, segmentInfo.D66, segmentInfo.D64]));
+duchyBorders.addLayer(new Duchy('Unknown', 'Grasslands', 'Neran', [segmentInfo.K14, segmentInfo.K15, segmentInfo.K16, segmentInfo.D71, segmentInfo.D70, segmentInfo.D68, segmentInfo.D66, segmentInfo.D65]));
+duchyBorders.addLayer(new Duchy('Unknown', 'Grasslands', 'Neran', [segmentInfo.C15, segmentInfo.D69, segmentInfo.D68, segmentInfo.D67]));
+duchyBorders.addLayer(new Duchy('Unknown', 'Woodland Savannah', "To'Resk", [segmentInfo.C16, segmentInfo.D69, segmentInfo.D70, segmentInfo.D72, segmentInfo.D73, segmentInfo.D74]));
+duchyBorders.addLayer(new Duchy('Unknown', 'Woodland Savannah', "To'Resk", [segmentInfo.D71, segmentInfo.D72, segmentInfo.D75, segmentInfo.D77, segmentInfo.K18, segmentInfo.K17]));
+duchyBorders.addLayer(new Duchy('Unknown', 'Woodland Savannah', "To'Resk", [segmentInfo.D75, segmentInfo.D78, segmentInfo.D79, segmentInfo.D76, segmentInfo.D73]));
+duchyBorders.addLayer(new Duchy('Unknown', 'Woodland Savannah', "To'Resk", [segmentInfo.C17, segmentInfo.D80, segmentInfo.D76, segmentInfo.D74]));
+duchyBorders.addLayer(new Duchy('Unknown', 'Swamp', 'Dras', [segmentInfo.K18b, segmentInfo.D81, segmentInfo.D83, segmentInfo.D82, segmentInfo.D78, segmentInfo.D77]));
+duchyBorders.addLayer(new Duchy('Unknown', 'Swamp', 'Dras', [segmentInfo.C18, segmentInfo.D80, segmentInfo.D79, segmentInfo.D82, segmentInfo.D84]));
+duchyBorders.addLayer(new Duchy('Unknown', 'Swamp', 'Dras', [segmentInfo.K19, segmentInfo.K30, segmentInfo.D85, segmentInfo.D81]));
+duchyBorders.addLayer(new Duchy('Unknown', 'Swamp', 'Dras', [segmentInfo.K31, segmentInfo.K32, segmentInfo.C19, segmentInfo.D84, segmentInfo.D83, segmentInfo.D85]));
